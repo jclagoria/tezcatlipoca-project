@@ -50,20 +50,22 @@ public Uni<List<CreditCard>> generate(int count) {
      quarkus.vertx.worker-pool-size=40
      ```
 
-## Resilience4j Integration
+## Resiliency Patterns and Resilience4j Integration
 
 As an alternative to MicroProfile Fault-Tolerance or Mutiny pipelines, we can use Resilience4j for a full suite of resiliency patterns:
 
 1. **CircuitBreaker**  
-   - Trips when failures exceed a threshold in a sliding window.  
-2. **Retry**  
-   - Retries transient failures with configurable back-off.  
+   - Trips when failures exceed a threshold in a sliding window, short-circuiting calls to unstable providers.
+2. **Retry with Back-off**  
+   - Retries transient errors up to `N` attempts with exponential back-off intervals.
 3. **Bulkhead** (optional)  
-   - Limits concurrent calls to protect downstream services.  
-4. **TimeLimiter** (optional)  
+   - Limits concurrent calls to protect downstream services.
+4. **Fallback**  
+   - Supplies a default or cached response when calls fail or the circuit is open.
+5. **TimeLimiter** (optional)  
    - Enforces a maximum call duration.
 
-5. **Design sketch**  
+6. **Design sketch**  
 ```java
 // wrap a Uni with Resilience4j operators
 Uni<List<T>> generate(int n) {

@@ -66,7 +66,8 @@ public Uni<List<Person>> generatePeopleWithVT(int count) {
 ```
 
 ## Resilience4j Integration
-A. **Where**: in the pom.xml alongside your other Quarkus extensions/dependencies.
+### A. pom.xml
+**Where**: in the pom.xml alongside your other Quarkus extensions/dependencies.
 
 ```xml
 <!-- Resilience4j for CircuitBreaker & Retry -->
@@ -86,14 +87,37 @@ A. **Where**: in the pom.xml alongside your other Quarkus extensions/dependencie
   <version>1.7.1</version>
 </dependency>
 ```
-
-B. In the application.properties 
+### B. application.properties 
 ```yml
 # Resilience4j config for creditCardProvider
 resilience4j.circuitbreaker.instances.creditCardProvider.slidingWindowSize=20
 resilience4j.circuitbreaker.instances.creditCardProvider.failureRateThreshold=50
 resilience4j.retry.instances.creditCardProvider.maxAttempts=3
 resilience4j.retry.instances.creditCardProvider.waitDuration=500ms
+```
+### C. Providers & Serialization
+Where: after your threading / virtual-thread examples.
+
+```java
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.mutiny.circuitbreaker.subscription.CircuitBreakerOperator;
+import io.github.resilience4j.mutiny.retry.RetryOperator;
+
+@ApplicationScoped
+public class CreditCardProvider {
+
+  private final CircuitBreaker cb = CircuitBreaker.ofDefaults("creditCardProvider");
+  private final Retry retry = Retry.ofDefaults("creditCardProvider");
+
+  public Uni<List<CreditCard>> generate(int count) {
+    return Uni.createFrom().item(() -> syncGenerate(count))
+      .on().transform().byApplying(CircuitBreakerOperator.of(cb))
+      .on().failure().retry().with(RetryOperator.of(retry))
+      .onFailure().recoverWithItem(Collections.emptyList())
+      .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+  }
+}
 ```
 
 ## Security Headers
