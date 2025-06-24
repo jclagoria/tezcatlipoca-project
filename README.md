@@ -25,6 +25,27 @@ A high-performance, open-source service for generating realistic fake data on de
 - Maven
 - Docker (for containerized run)
 
+## Concurrency & Throughput
+
+- To leverage Java 21’s lightweight virtual threads for blocking tasks while maintaining high throughput (10 k RPS):
+
+- **Reactive core**  
+  Vert.x event-loops handle all non-blocking I/O and in-memory generation.
+
+- **Virtual Threads (JDK 21+)**  
+  Isolate each blocking or CPU-intensive task on its own virtual thread without manual pool tuning:
+
+  ```java
+  // Create a virtual-thread per task executor
+  ExecutorService vtPool = Executors.newVirtualThreadPerTaskExecutor();
+
+  public Uni<List<CreditCard>> generateCreditCards(int count) {
+    return Uni.createFrom()
+              .item(() -> syncGenerateCreditCards(count))
+              .runSubscriptionOn(vtPool);
+  }
+  ```
+
 ## Local Development
 
 - Clone the repository
@@ -95,12 +116,24 @@ randomgen -t person -c 3 -l en_US
 
 Parameters are controlled via application.properties or environment variables:
 
-# Rate limiting
+### Rate limiting
 rate-limiter.global=10000
 rate-limiter.per-ip=1000
 
-# OpenAPI path
+### OpenAPI path
 quarkus.smallrye-openapi.path=/openapi
+
+### Resiliency Patterns
+
+We use Resilience4j for circuit-breaking, retries, and fallbacks to protect against provider failures:
+
+```properties
+# Resilience4j: CreditCardProvider example
+resilience4j.circuitbreaker.instances.creditCardProvider.slidingWindowSize=20
+resilience4j.circuitbreaker.instances.creditCardProvider.failureRateThreshold=50
+resilience4j.retry.instances.creditCardProvider.maxAttempts=3
+resilience4j.retry.instances.creditCardProvider.waitDuration=500ms
+```
 
 # Security Measures
 

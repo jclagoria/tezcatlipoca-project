@@ -24,18 +24,20 @@ GraphQLController.java: define schema and resolvers
 
 ## OpenAPI config in application.properties:
 
+```yml
 quarkus.swagger-ui.always-include=true
 quarkus.smallrye-openapi.path=/openapi
+```
 
 ## Rate Limiting
 
 Add Bucket4j and configure limits in RateLimiterFilter.java
 
-application.yaml snippet:
-
+```yml
 rate-limiter:
   global: 10000
   per-ip: 1000
+```
 
 ## Serialization & Format Support
 
@@ -49,15 +51,66 @@ Annotate with @Counted, @Timed
 
 Enable /metrics endpoint
 
+## Providers & Serialization
+
+```java
+// ── Virtual-thread example ──
+// requires: Java 21+
+// each blocking call runs in its own virtual thread
+ExecutorService vtPool = Executors.newVirtualThreadPerTaskExecutor();
+
+public Uni<List<Person>> generatePeopleWithVT(int count) {
+  return Uni.createFrom().item(() -> syncGeneratePeople(count))
+            .runSubscriptionOn(vtPool);
+}
+```
+
+## Resilience4j Integration
+A. **Where**: in the pom.xml alongside your other Quarkus extensions/dependencies.
+
+```xml
+<!-- Resilience4j for CircuitBreaker & Retry -->
+<dependency>
+  <groupId>io.github.resilience4j</groupId>
+  <artifactId>resilience4j-circuitbreaker</artifactId>
+  <version>1.7.1</version>
+</dependency>
+<dependency>
+  <groupId>io.github.resilience4j</groupId>
+  <artifactId>resilience4j-retry</artifactId>
+  <version>1.7.1</version>
+</dependency>
+<dependency>
+  <groupId>io.github.resilience4j</groupId>
+  <artifactId>resilience4j-mutiny</artifactId>
+  <version>1.7.1</version>
+</dependency>
+```
+
+B. In the application.properties 
+```yml
+# Resilience4j config for creditCardProvider
+resilience4j.circuitbreaker.instances.creditCardProvider.slidingWindowSize=20
+resilience4j.circuitbreaker.instances.creditCardProvider.failureRateThreshold=50
+resilience4j.retry.instances.creditCardProvider.maxAttempts=3
+resilience4j.retry.instances.creditCardProvider.waitDuration=500ms
+```
+
 ## Security Headers
 
 Add security headers configuration in application.properties:
 
-```properties
+```yml
 quarkus.http.headers.x-content-type-options=nosniff
 quarkus.http.headers.x-frame-options=DENY
 quarkus.http.headers.x-xss-protection=1; mode=block
 quarkus.http.headers.strict-transport-security=max-age=31536000; includeSubDomains
+
+# Vert.x event‐loop threads (for non‐blocking I/O)
+quarkus.vertx.event-loops-pool-size=16
+
+# Worker threads (for blocking/CPU‐intensive tasks)
+quarkus.vertx.worker-pool-size=40
 ```
 
 ## Error Handling
@@ -144,6 +197,7 @@ FROM registry.access.redhat.com/ubi8/openjdk-17-runtime
 COPY target/*-runner.jar /app/app.jar
 CMD ["java", "-jar", "/app/app.jar"]
 ```
+
 ```bash
 docker-compose.yaml and Helm charts for deployment
 ```

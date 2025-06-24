@@ -12,6 +12,67 @@ The core domain logic (data generation) lives at the center; REST and GraphQL co
 - Liskov Substitution: Implementations of DataProvider<T> can be substituted transparently.
 - Interface Segregation: Separate interfaces for data generation (DataProvider), serialization (FormatSerializer), and rate limiting (RateLimitService).
 - Dependency Inversion: High-level modules (e.g., DataService) depend on abstractions (DataProvider<T>, FormatSerializer), not concrete implementations.
+- Custom data providers implement the `DataProvider<T>` interface and register automatically via CDI:
+- Annotate each provider with `@ApplicationScoped` (and optionally `@Named` for explicit keys).  
+- The `ProviderRegistry` (in `Infrastructure`) injects `Instance<DataProvider<?>>` and builds a lookup map at startup.  
+- To add a new provider, simply place its implementation on the classpath—no core changes required.
+
+## Concurrency & Threading Strategies
+
+In order to sustain high throughput (e.g. 10 k RPS) while keeping event‐loop threads free, we adopt a hybrid model:
+1. **Reactive, non‐blocking core**  
+   - All endpoints return `Uni<T>` or `Multi<T>` (Mutiny) so Vert.x event‐loops never block.  
+   - Use reactive clients (e.g. Reactive PgClient) and in‐memory generation logic that is cheap.
+2. **Virtual Threads (Java 21+)**  
+   - Offload providers or serializers that must block (file I/O, legacy libs, heavy JSON→CSV work) onto a bounded thread‐pool.
+- Instead of managing a fixed worker-pool, you can leverage Project Loom’s virtual threads to isolate blocking calls without starving your event-loops:
+
+```java
+// create a virtual-thread per task executor
+ExecutorService vtPool = Executors.newVirtualThreadPerTaskExecutor();
+
+public Uni<List<CreditCard>> generate(int count) {
+  return Uni.createFrom().item(() -> syncGenerateCreditCards(count))
+            .runSubscriptionOn(vtPool);
+}     
+```
+
+4. **Tunable pool sizes**  
+   - You can simply note the JDK requirement; no extra properties are needed:
+     ```yml
+     # (Optional) When using virtual threads you do not need to tune worker-pool sizes,
+      # but you must run on JDK 21 or later.
+
+     ```
+  - (If not using virtual threads) configure worker threads in `application.properties`:  
+     ```yml
+     quarkus.vertx.event-loops-pool-size=16
+     quarkus.vertx.worker-pool-size=40
+     ```
+
+## Resilience4j Integration
+
+As an alternative to MicroProfile Fault-Tolerance or Mutiny pipelines, we can use Resilience4j for a full suite of resiliency patterns:
+
+1. **CircuitBreaker**  
+   - Trips when failures exceed a threshold in a sliding window.  
+2. **Retry**  
+   - Retries transient failures with configurable back-off.  
+3. **Bulkhead** (optional)  
+   - Limits concurrent calls to protect downstream services.  
+4. **TimeLimiter** (optional)  
+   - Enforces a maximum call duration.
+
+5. **Design sketch**  
+```java
+// wrap a Uni with Resilience4j operators
+Uni<List<T>> generate(int n) {
+  return Uni.createFrom().item(() -> syncGenerate(n))
+    .on().transform().byApplying(CircuitBreakerOperator.of(cbInstance))
+    .on().failure().retry().with(RetryOperator.of(retryInstance))
+    .onFailure().recoverWithItem(Collections.emptyList());
+}
+```
 
 ## Component Diagram
 

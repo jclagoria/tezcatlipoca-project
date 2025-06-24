@@ -35,6 +35,7 @@ Organizations and developers often need believable but fictitious data for testi
 - Expose Prometheus metrics for monitoring performance and usage.
 - Support additional output formats (e.g., CSV, XML).
 - Enable pluggable data providers to extend fake data types.
+- Implement resiliency patterns (working with Resilience4j for circuit breaker, retry with back-off, and fallback) for each data provider to prevent cascading failures and ensure graceful degradation under error conditions.
 
 ### Could
 
