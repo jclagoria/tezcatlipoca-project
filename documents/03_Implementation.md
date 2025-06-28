@@ -74,17 +74,16 @@ public Uni<List<Person>> generatePeopleWithVT(int count) {
 <dependency>
   <groupId>io.github.resilience4j</groupId>
   <artifactId>resilience4j-circuitbreaker</artifactId>
-  <version>1.7.1</version>
+  <version>2.3.0</version>
 </dependency>
 <dependency>
   <groupId>io.github.resilience4j</groupId>
   <artifactId>resilience4j-retry</artifactId>
-  <version>1.7.1</version>
+  <version>2.3.0</version>
 </dependency>
 <dependency>
-  <groupId>io.github.resilience4j</groupId>
-  <artifactId>resilience4j-mutiny</artifactId>
-  <version>1.7.1</version>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
 </dependency>
 ```
 ### B. application.properties 
