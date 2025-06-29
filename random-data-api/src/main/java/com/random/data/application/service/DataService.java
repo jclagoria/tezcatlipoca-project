@@ -2,6 +2,8 @@ package com.random.data.application.service;
 
 import com.random.data.application.registration.ProviderRegistry;
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.ApiException;
+import com.random.data.domain.port.exception.DataGenerationException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -47,10 +49,14 @@ public class DataService {
                         LOGGER.debug("generate() pipeline completed successfully: {} record(s) for type='{}'",
                                 records.size(), type)
                 )
-                // Error hook
                 .onFailure().invoke(err ->
                         LOGGER.error("Error in DataService.generate() for type='{}', locale='{}', count={}",
                                 type, locale, count, err)
-                );
+                ).onFailure().transform(err -> {
+                    if (err instanceof ApiException) {
+                        return err;
+                    }
+                    return new DataGenerationException(type, locale, count, err);
+                });
     }
 }

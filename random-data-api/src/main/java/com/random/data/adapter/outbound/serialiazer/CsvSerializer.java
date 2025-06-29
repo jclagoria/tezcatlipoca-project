@@ -2,6 +2,7 @@ package com.random.data.adapter.outbound.serialiazer;
 
 import com.random.data.application.registration.SerializerKey;
 import com.random.data.domain.port.SerializePort;
+import com.random.data.domain.port.exception.DataSerializationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class CsvSerializer implements SerializePort {
             return csv;
         } catch (Exception e) {
             LOGGER.error("Error serializing {} record(s) to CSV", size, e);
-            throw e;
+            throw new DataSerializationException("CSV", e);
         }
     }
 

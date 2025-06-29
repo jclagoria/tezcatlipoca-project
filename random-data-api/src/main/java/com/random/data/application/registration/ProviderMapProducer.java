@@ -1,6 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.DuplicateProviderKeyException;
+import com.random.data.domain.port.exception.MissingProviderKeyException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.Bean;
@@ -50,9 +52,7 @@ public class ProviderMapProducer {
 
                     ProviderKey ann = implClass.getAnnotation(ProviderKey.class);
                     if (ann == null) {
-                        throw new IllegalStateException(
-                                "No @ProviderKey on DataProvider implementation: "
-                                        + implClass.getName());
+                        throw new MissingProviderKeyException(implClass);
                     }
 
                     String key = KEY_CACHE.computeIfAbsent(
@@ -72,13 +72,11 @@ public class ProviderMapProducer {
                         Map.Entry::getKey,
                         Map.Entry::getValue,
                         (existing, replacement) -> {
-                            throw new IllegalStateException(String.format(
-                                    "Duplicate provider key '%s' for classes %s and %s",
-                                    // reuse the cached key for clarity
-                                    KEY_CACHE.get(existing.getClass()),
-                                    existing.getClass(),
-                                    replacement.getClass()
-                            ));
+                                String key = KEY_CACHE.get(existing.getClass());
+                                throw new DuplicateProviderKeyException(
+                                        key,
+                                        existing.getClass(),
+                                        replacement.getClass());
                         },
                         ConcurrentHashMap::new
                 ));

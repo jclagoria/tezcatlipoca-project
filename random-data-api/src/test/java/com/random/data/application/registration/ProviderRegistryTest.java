@@ -1,6 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.MissingProviderKeyException;
+import com.random.data.domain.port.exception.ProviderNotFoundException;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -80,6 +82,7 @@ class ProviderRegistryTest {
 
         @ParameterizedTest(name = "[{index}] invalid key=''{0}''")
         @ValueSource(strings = {"", "unknown", "   "})
+        @DisplayName("lookup invalid or blank keys should throw ProviderNotFoundException")
         void lookup_invalidOrBlankKeys_shouldThrow(String key) {
             Instance<DataProvider<?>> inst =
                     ProviderRegistryFixtures.instanceOf(Collections.singletonList(
@@ -88,24 +91,24 @@ class ProviderRegistryTest {
             ProviderRegistry registry = new ProviderRegistry(inst);
 
             assertThatThrownBy(() -> registry.getProvider(key))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("No provider");
+                    .isInstanceOf(ProviderNotFoundException.class)
+                    .hasMessageContaining("No provider found for type");
         }
 
         @Test
-        @DisplayName("Missing @ProviderKey on implementation → constructor failure")
+        @DisplayName("constructor should throw MissingProviderKeyException when @ProviderKey is missing")
         void missingProviderKeyAnnotation_shouldThrowOnConstruction() {
             DataProvider<?> unkeyed = ProviderRegistryFixtures.unkeyedProvider();
             Instance<DataProvider<?>> inst =
                     ProviderRegistryFixtures.instanceOf(Collections.singletonList(unkeyed));
 
             assertThatThrownBy(() -> new ProviderRegistry(inst))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("missing @ProviderKey");
+                    .isInstanceOf(MissingProviderKeyException.class)
+                    .hasMessageContaining("is missing @ProviderKey");
         }
 
         @Test
-        @DisplayName("Null lookup key → IllegalArgumentException")
+        @DisplayName("getProvider(null) should throw ProviderNotFoundException")
         void getProvider_nullKey_shouldThrowNullPointer() {
             Instance<DataProvider<?>> inst =
                     ProviderRegistryFixtures.instanceOf(Collections.singletonList(
@@ -114,7 +117,8 @@ class ProviderRegistryTest {
             ProviderRegistry registry = new ProviderRegistry(inst);
 
             assertThatThrownBy(() -> registry.getProvider(null))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(ProviderNotFoundException.class)
+                    .hasMessageContaining("No provider found for type");
         }
     }
 

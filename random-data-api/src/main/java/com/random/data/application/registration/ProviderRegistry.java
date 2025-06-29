@@ -1,6 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.MissingProviderKeyException;
+import com.random.data.domain.port.exception.ProviderNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
@@ -34,10 +36,7 @@ public class ProviderRegistry {
                 impl = impl.getSuperclass();
             }
             if (keyAnno == null) {
-                throw new IllegalStateException(
-                        "DataProvider implementation " + provider.getClass().getName() +
-                                " is missing @ProviderKey"
-                );
+                throw new MissingProviderKeyException(provider.getClass());
             }
 
             String key = keyAnno.value().trim().toLowerCase();
@@ -61,7 +60,7 @@ public class ProviderRegistry {
                     "No provider found for type='{}'. Supported types are: {}",
                     type, providers.keySet()
             );
-            throw new IllegalArgumentException("No provider found for type: " + type);
+            throw new ProviderNotFoundException(type, providers.keySet());
         }
 
         LOGGER.debug(

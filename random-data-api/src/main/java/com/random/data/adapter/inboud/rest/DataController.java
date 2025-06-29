@@ -3,7 +3,7 @@ package com.random.data.adapter.inboud.rest;
 import com.random.data.application.service.DataService;
 import com.random.data.domain.port.RateLimiterPort;
 import com.random.data.domain.port.SerializePort;
-import com.random.data.domain.port.exception.RateLimitExceededException;
+import com.random.data.domain.port.exception.*;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.inject.Any;
@@ -40,7 +40,7 @@ public class DataController {
         this.rateLimiterPort = rateLimiterPort;
         this.serializers = serializerInstances.stream()
                 .collect(Collectors.toMap(
-                        SerializePort::format,    // returns "csv", "json", or "xml"
+                        SerializePort::format,
                         Function.identity()
                 ));
     }
@@ -57,7 +57,7 @@ public class DataController {
 
         if (count < MIN_COUNT || count > MAX_COUNT) {
             LOGGER.warn("Invalid count {}: must be between {} and {}", count, MIN_COUNT, MAX_COUNT);
-            throw new BadRequestException(
+            throw new InvalidParameterException(
                     String.format("Count must be between %d and %d", MIN_COUNT, MAX_COUNT)
             );
         }
@@ -67,9 +67,7 @@ public class DataController {
         SerializePort serializer = serializers.get(key);
         if (serializer == null) {
             LOGGER.warn("Unsupported format requested: {}", format);
-            throw new BadRequestException(
-                    String.format("Format \"%s\" is not supported", format)
-            );
+            throw new UnsupportedFormatException(format);
         }
 
         try {
@@ -85,25 +83,33 @@ public class DataController {
         }
 
         return dataService.generate(type, locale, count)
-                .onItem().invoke(records ->
-                        LOGGER.debug("Generated {} record(s) for type={}, locale={}", records.size(), type, locale)
+                .onFailure().invoke(err ->
+                        LOGGER.error("Error generating data", err)
                 )
+                .onFailure().transform(err -> {
+                    // let domain ApiExceptions pass through
+                    if (err instanceof ApiException) {
+                        return err;
+                    }
+                    // wrap any other failure
+                    return new DataControllerException(type, locale, count, err);
+                })
                 .flatMap(records ->
-                        Uni.createFrom().item(() -> serializer.serialize(records))
+                        Uni.createFrom().item(() -> {
+                                    try {
+                                        return serializer.serialize(records);
+                                    } catch (Exception e) {
+                                        // serialization errors bubble as DataSerializationException
+                                        throw new DataSerializationException(key.toUpperCase(), e);
+                                    }
+                                })
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 )
-                .onItem().invoke(payload ->
-                        LOGGER.debug("Serialization complete: {} bytes for format={}", payload.length(), format)
-                )
-                // Handle any failure in the reactive pipeline
-                .onFailure().invoke(err ->
-                        LOGGER.error("Error in processing getData for type=" + type, err)
-                )
                 .map(payload -> {
-                    String mediaType = "xml".equalsIgnoreCase(format)
+                    String mediaType = "xml".equalsIgnoreCase(key)
                             ? MediaType.APPLICATION_XML
                             : MediaType.APPLICATION_JSON;
-                    LOGGER.info("Responding with {}-encoded payload for type={}", format, type);
+                    LOGGER.info("Responding with {}-encoded payload for type={}", key, type);
                     return Response.ok(payload, mediaType).build();
                 });
     }

@@ -1,8 +1,8 @@
 package com.random.data.adapter.outbound.serialiazer;
 
-import com.random.data.application.registration.ProviderKey;
 import com.random.data.application.registration.SerializerKey;
 import com.random.data.domain.port.SerializePort;
+import com.random.data.domain.port.exception.DataSerializationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
@@ -39,7 +39,7 @@ public class JsonSerializer implements SerializePort {
             return json;
         } catch (Exception e) {
             LOGGER.error("Error serializing {} record(s) to JSON", size, e);
-            throw e;
+            throw new DataSerializationException("JSON", e);
         }
     }
 

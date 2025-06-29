@@ -2,6 +2,8 @@ package com.random.data.application.registration;
 
 import com.random.data.adapter.outbound.serialiazer.CsvSerializer;
 import com.random.data.domain.port.SerializePort;
+import com.random.data.domain.port.exception.DuplicateSerializerKeyException;
+import com.random.data.domain.port.exception.MissingSerializerKeyException;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -37,7 +39,7 @@ class SerializerMapProducerTest {
     class HappyPath {
 
         @Test
-        @DisplayName("Single serializer registered")
+        @DisplayName("Single serializer should be registered correctly")
         void singleSerializerRegistered() {
             CsvSerializer csv = new CsvSerializer();
             Bean<CsvSerializer> bean = SerializerTestFixtures.beanOf(bm, CsvSerializer.class, csv);
@@ -80,7 +82,7 @@ class SerializerMapProducerTest {
         }
 
         @Test
-        @DisplayName("Empty bean set returns empty map")
+        @DisplayName("Empty bean set should return empty map")
         void emptyBeanSet_returnsEmptyMap() {
             when(bm.getBeans(SerializePort.class)).thenReturn(Collections.emptySet());
             Map<String, SerializePort> map = producer.produceSerializerMap();
@@ -93,7 +95,7 @@ class SerializerMapProducerTest {
     class Errors {
 
         @Test
-        @DisplayName("Missing @SerializerKey throws exception")
+        @DisplayName("Missing @SerializerKey should throw MissingSerializerKeyException")
         void missingAnnotationThrows() {
             // Stub a serializer without @SerializerKey
             class NoKeySerializer implements SerializePort {
@@ -106,12 +108,13 @@ class SerializerMapProducerTest {
             when(bm.getBeans(SerializePort.class)).thenReturn(Set.of(bean));
 
             assertThatThrownBy(() -> producer.produceSerializerMap())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("No @SerializerKey");
+                    .isInstanceOf(MissingSerializerKeyException.class)
+                    .hasMessageContaining("is missing @SerializerKey")
+                    .hasMessageContaining(NoKeySerializer.class.getName());
         }
 
         @Test
-        @DisplayName("Duplicate serializer keys throw exception")
+        @DisplayName("Duplicate serializer key should throw DuplicateSerializerKeyException")
         void duplicateCsvKeyThrows() {
             @SerializerKey("csv")
             class Stub1 implements SerializePort {
@@ -132,8 +135,8 @@ class SerializerMapProducerTest {
             when(bm.getBeans(SerializePort.class)).thenReturn(Set.of(b1, b2));
 
             assertThatThrownBy(() -> producer.produceSerializerMap())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Duplicate serializer key: csv");
+                    .isInstanceOf(DuplicateSerializerKeyException.class)
+                    .hasMessageContaining("Duplicate serializer key detected: 'csv'");
         }
 
         @Test
