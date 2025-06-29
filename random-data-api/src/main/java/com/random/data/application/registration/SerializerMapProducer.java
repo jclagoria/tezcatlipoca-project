@@ -1,6 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.SerializePort;
+import com.random.data.domain.port.exception.DuplicateSerializerKeyException;
+import com.random.data.domain.port.exception.MissingSerializerKeyException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.Bean;
@@ -33,8 +35,7 @@ public class SerializerMapProducer {
             Class<?> implClass = bean.getBeanClass();
             SerializerKey ann = implClass.getAnnotation(SerializerKey.class);
             if (ann == null) {
-                throw new IllegalStateException(
-                        "No @SerializerKey on Serializer implementation: " + implClass);
+                throw new MissingSerializerKeyException(implClass);
             }
             String key = SERIALIZER_CACHE.computeIfAbsent(
                     implClass,
@@ -49,7 +50,7 @@ public class SerializerMapProducer {
 
             // Check for duplicates by key, not by instance
             if (map.putIfAbsent(key, instance) != null) {
-                throw new IllegalStateException("Duplicate serializer key: " + key);
+                throw new DuplicateSerializerKeyException(key);
             }
         }
         return map;

@@ -99,7 +99,7 @@ class DataControllerTest {
                 .when()
                 .get("/api/person")
                 .then()
-                .statusCode(500);
+                .statusCode(429);
     }
 
     @ParameterizedTest(name = "count={0} → 400")

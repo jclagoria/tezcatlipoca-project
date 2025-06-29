@@ -1,8 +1,8 @@
 package com.random.data.adapter.outbound.serialiazer;
 
-import com.random.data.application.registration.ProviderKey;
 import com.random.data.application.registration.SerializerKey;
 import com.random.data.domain.port.SerializePort;
+import com.random.data.domain.port.exception.DataSerializationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.xml.bind.JAXBContext;
@@ -67,10 +67,7 @@ public class XmlSerializer implements SerializePort {
                     "JAXBException during XML serialization for type={} with {} record(s)",
                     elementType.getName(), size, e
             );
-            throw new RuntimeException(
-                    String.format("XML serialization failed for %s with %d records", elementType.getName(), size),
-                    e
-            );
+            throw new DataSerializationException("XML", e);
         }
     }
 
@@ -100,7 +97,7 @@ public class XmlSerializer implements SerializePort {
             return JAXBContext.newInstance(Wrapper.class, cls);
         } catch (JAXBException e) {
             LOGGER.error("Unable to initialize JAXBContext for {}", cls.getName(), e);
-            throw new IllegalStateException("Unable to initialize JAXBContext for " + cls.getName(), e);
+            throw new DataSerializationException("XML", e);
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.DuplicateProviderKeyException;
+import com.random.data.domain.port.exception.MissingProviderKeyException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import org.junit.jupiter.api.DisplayName;
@@ -11,19 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayName("ProviderMapProducer Tests")
 class ProviderMapProducerTest {
 
     private final ProviderMapProducer producer = new ProviderMapProducer();
 
     @Nested
-    @DisplayName("Normalization")
-    class NormalizationTests {
+    @DisplayName("Provider key normalization rules")
+    class ProviderKeyNormalizationTests {
 
         @Test
-        @DisplayName("Should trim whitespace and lowercase the provider key")
+        @DisplayName("Trim whitespace and lowercase the provider key")
         void shouldTrimAndLowercaseKey() {
             @ProviderKey("  Mixed Case  ")
             class P implements DataProvider<String> {
@@ -45,11 +48,11 @@ class ProviderMapProducerTest {
     }
 
     @Nested
-    @DisplayName("Happy-Path")
+    @DisplayName("Happy path: distinct provider keys")
     class HappyPathTests {
 
         @Test
-        @DisplayName("Should produce entries for distinct provider keys A and B")
+        @DisplayName("Produce entries for distinct provider keys A and B")
         void shouldProduceMultipleDistinctKeys() {
             @ProviderKey("A")
             class AImpl implements DataProvider<String> {
@@ -80,7 +83,7 @@ class ProviderMapProducerTest {
     }
 
     @Test
-    @DisplayName("Missing @ProviderKey → IllegalStateException")
+    @DisplayName("Missing @ProviderKey should throw MissingProviderKeyException")
     void missingAnnotationShouldFail() {
         class NoKey implements DataProvider<String> {
             @Override
@@ -92,17 +95,14 @@ class ProviderMapProducerTest {
         BeanManager bm = TestFixtures.beanManagerFor(Set.of(bean));
         producer.beanManager = bm;
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
-                producer::produceProviderMap
-        );
-        assertThat(ex.getMessage())
-                .contains("No @ProviderKey on DataProvider implementation")
-                .contains(NoKey.class.getName());
+        assertThatThrownBy(producer::produceProviderMap)
+                .isInstanceOf(MissingProviderKeyException.class)
+                .hasMessageContaining("missing @ProviderKey")
+                .hasMessageContaining(NoKey.class.getName());
     }
 
     @Test
-    @DisplayName("Duplicate normalized keys → IllegalStateException")
+    @DisplayName("Duplicate normalized keys should throw DuplicateProviderKeyException")
     void duplicateKeysShouldFail() {
         @ProviderKey("dup")
         class Impl1 implements DataProvider<String> {
@@ -124,14 +124,11 @@ class ProviderMapProducerTest {
         BeanManager bm = TestFixtures.beanManagerFor(Set.of(bean1, bean2));
         producer.beanManager = bm;
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
-                producer::produceProviderMap
-        );
-        assertThat(ex.getMessage())
-                .contains("Duplicate provider key 'dup'")
-                .contains(Impl1.class.getName())
-                .contains(Impl2.class.getName());
+        assertThatThrownBy(producer::produceProviderMap)
+                .isInstanceOf(DuplicateProviderKeyException.class)
+                .hasMessageContaining("Duplicate provider key 'dup'")
+                .hasMessageContaining(Impl1.class.getName())
+                .hasMessageContaining(Impl2.class.getName());
     }
 
 }

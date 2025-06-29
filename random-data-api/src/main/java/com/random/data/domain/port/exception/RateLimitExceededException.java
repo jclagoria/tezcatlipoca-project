@@ -1,7 +1,10 @@
 package com.random.data.domain.port.exception;
 
-public class RateLimitExceededException extends RuntimeException {
+import jakarta.ws.rs.core.Response;
+
+public class RateLimitExceededException extends ApiException {
+
     public RateLimitExceededException(String message) {
-        super(message);
+        super(Response.Status.TOO_MANY_REQUESTS, message);
     }
 }

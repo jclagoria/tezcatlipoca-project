@@ -2,6 +2,7 @@ package com.random.data.adapter.outbound.provider;
 
 import com.random.data.application.registration.ProviderKey;
 import com.random.data.domain.port.DataProvider;
+import com.random.data.domain.port.exception.InvalidParameterException;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class PersonProvider implements DataProvider<Person> {
 
         if (count < 1) {
             LOGGER.warn("Invalid count {}: must be at least 1", count);
-            throw new IllegalArgumentException("count must be at least 1");
+            throw new InvalidParameterException("Count must be at least 1");
         }
 
         LOGGER.info("Generated Person record(s) for locale={}", locale);
