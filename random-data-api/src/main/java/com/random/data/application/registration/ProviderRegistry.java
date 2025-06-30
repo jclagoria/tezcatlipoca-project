@@ -50,11 +50,9 @@ public class ProviderRegistry {
     }
 
     public DataProvider<?> getProvider(String type) {
-        LOGGER.debug("getProvider called with raw type='{}'", type);
         String key = (type == null ? "" : type.trim().toLowerCase());
-        LOGGER.trace("Normalized lookup key='{}'", key);
-
         DataProvider<?> dataProvider = providers.get(key);
+
         if (dataProvider == null) {
             LOGGER.warn(
                     "No provider found for type='{}'. Supported types are: {}",
@@ -71,7 +69,6 @@ public class ProviderRegistry {
     }
 
     public Set<String> supportedTypes() {
-        LOGGER.debug("supportedTypes() called; returning {}", providers.keySet());
         return providers.keySet();
     }
 

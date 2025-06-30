@@ -4,6 +4,7 @@ import com.random.data.application.service.DataService;
 import com.random.data.domain.port.RateLimiterPort;
 import com.random.data.domain.port.SerializePort;
 import com.random.data.domain.port.exception.*;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.inject.Any;
@@ -62,7 +63,6 @@ public class DataController {
             );
         }
 
-        // — normalize the requested format key —
         String key = format.trim().toLowerCase(Locale.ROOT);
         SerializePort serializer = serializers.get(key);
         if (serializer == null) {
