@@ -25,30 +25,18 @@ public class DataService {
     }
 
     public Uni<List<?>> generate(String type, String locale, int count) {
-        // Log invocation immediately
-        LOGGER.debug("generate() called: type={}, locale={}, count={}", type, locale, count);
 
         return Uni.createFrom()
                 // force the generic to List<?> so the returned Uni is Uni<List<?>>
                 .<List<?>>item(() -> {
                     // Lookup provider
-                    LOGGER.debug("Looking up DataProvider for type='{}'", type);
                     DataProvider<?> dataProvider = providerRegistry.getProvider(type);
-                    LOGGER.debug("Using provider '{}' for type='{}'", dataProvider.getClass().getSimpleName(), type);
 
                     // Generate data
-                    List<?> result = dataProvider.generate(locale, count);
-                    LOGGER.debug("DataProvider.generate() returned {} record(s) for type='{}', locale='{}'",
-                            result.size(), type, locale);
-                    return result;
+                    return  dataProvider.generate(locale, count);
                 })
                 // Offload blocking or CPU-intensive work to the default executor (e.g., virtual threads)
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                // Post-generation hook
-                .onItem().invoke(records ->
-                        LOGGER.debug("generate() pipeline completed successfully: {} record(s) for type='{}'",
-                                records.size(), type)
-                )
                 .onFailure().invoke(err ->
                         LOGGER.error("Error in DataService.generate() for type='{}', locale='{}', count={}",
                                 type, locale, count, err)
