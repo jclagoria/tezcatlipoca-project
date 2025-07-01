@@ -1,0 +1,18 @@
+package com.random.data.adapter.outbound.provider.person.model;
+
+public record Person(
+        String gender,
+        Name name,
+        Location location,
+        String email,
+        Login login,
+        Dob dob,
+        Registered registered,
+        String phone,
+        String cell,
+        Id id,
+        Picture picture,
+        String nat
+) {
+
+}
