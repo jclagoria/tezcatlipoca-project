@@ -4,7 +4,6 @@ import com.random.data.application.service.DataService;
 import com.random.data.domain.port.RateLimiterPort;
 import com.random.data.domain.port.SerializePort;
 import com.random.data.domain.port.exception.*;
-import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.inject.Any;
@@ -13,11 +12,11 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,7 +56,7 @@ public class DataController {
         LOGGER.debug("getData called: type={}, locale={}, count={}, format={}", type, locale, count, format);
 
         if (count < MIN_COUNT || count > MAX_COUNT) {
-            LOGGER.warn("Invalid count {}: must be between {} and {}", count, MIN_COUNT, MAX_COUNT);
+            LOGGER.error("Invalid count {}: must be between {} and {}", count, MIN_COUNT, MAX_COUNT);
             throw new InvalidParameterException(
                     String.format("Count must be between %d and %d", MIN_COUNT, MAX_COUNT)
             );
@@ -67,14 +66,14 @@ public class DataController {
         SerializePort serializer = serializers.get(key);
         if (serializer == null) {
             LOGGER.warn("Unsupported format requested: {}", format);
-            throw new UnsupportedFormatException(format);
+            throw new UnsupportedFormatException("Unsupported format: " + format);
         }
 
         try {
             rateLimiterPort.consume("/api/" + type);
             LOGGER.debug("Rate limiter allowed request for type={}", type);
         } catch (RateLimitExceededException e) {
-            LOGGER.warn("Rate limit exceeded for type={}", type);
+            LOGGER.error("Rate limit exceeded for type={}", type);
             return Uni.createFrom().item(
                     Response.status(Response.Status.TOO_MANY_REQUESTS)
                             .entity(Map.of("error", "Rate limit exceeded"))
@@ -99,7 +98,7 @@ public class DataController {
                                     try {
                                         return serializer.serialize(records);
                                     } catch (Exception e) {
-                                        // serialization errors bubble as DataSerializationException
+                                        LOGGER.error("Error serializing data for type={}", e.getMessage());
                                         throw new DataSerializationException(key.toUpperCase(), e);
                                     }
                                 })

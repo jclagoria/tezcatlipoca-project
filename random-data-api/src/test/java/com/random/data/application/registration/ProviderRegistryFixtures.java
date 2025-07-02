@@ -1,6 +1,7 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.inject.Instance;
 import org.mockito.stubbing.Answer;
 
@@ -13,16 +14,16 @@ public class ProviderRegistryFixtures {
     @ProviderKey("person")
     public static class PersonProvider implements DataProvider<String> {
         @Override
-        public List<String> generate(String locale, int count) {
-            return Collections.nCopies(count, "foo");
+        public Uni<List<String>> generate(String locale, int count) {
+            return (Uni<List<String>>) Collections.nCopies(count, "foo");
         }
     }
 
     @ProviderKey("company")
     public static class CompanyProvider implements DataProvider<Integer> {
         @Override
-        public List<Integer> generate(String locale, int count) {
-            return Collections.nCopies(count, 42);
+        public Uni<List<Integer>> generate(String locale, int count) {
+            return (Uni<List<Integer>>) Collections.nCopies(count, 42);
         }
     }
 
@@ -30,8 +31,8 @@ public class ProviderRegistryFixtures {
         // anonymous class without @ProviderKey
         return new DataProvider<>() {
             @Override
-            public List<Object> generate(String locale, int count) {
-                return List.of();
+            public Uni<List<Object>> generate(String locale, int count) {
+                return (Uni<List<Object>>) List.of();
             }
         };
     }
