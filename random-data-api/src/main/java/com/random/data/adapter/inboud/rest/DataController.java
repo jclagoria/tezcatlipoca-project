@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +33,20 @@ public class DataController {
     private final DataService dataService;
     private final RateLimiterPort rateLimiterPort;
     private final Map<String, SerializePort> serializers;
+    private final Counter errorCounter;
+
 
     @Inject
     public DataController(DataService dataService,
                           RateLimiterPort rateLimiterPort,
-                          @Any Instance<SerializePort> serializerInstances) {
+                          @Any Instance<SerializePort> serializerInstances,
+                          @Metric(
+                                  name = "data_service_generate_errors",
+                                  absolute = true,
+                                  description = "Number of errors in calls to DataService#generate"
+                          )
+                              Counter errorCounter
+    ) {
         this.dataService = dataService;
         this.rateLimiterPort = rateLimiterPort;
         this.serializers = serializerInstances.stream()
@@ -43,6 +54,7 @@ public class DataController {
                         SerializePort::format,
                         Function.identity()
                 ));
+        this.errorCounter = errorCounter;
     }
 
     @GET
@@ -81,16 +93,19 @@ public class DataController {
             );
         }
 
+        return generateData(type, locale, count, key, serializer)
+                .onFailure().invoke(e -> errorCounter.inc(1));
+    }
+
+    private Uni<Response> generateData(String type, String locale, int count, String key, SerializePort serializer) {
         return dataService.generate(type, locale, count)
                 .onFailure().invoke(err ->
                         LOGGER.error("Error generating data", err)
                 )
                 .onFailure().transform(err -> {
-                    // let domain ApiExceptions pass through
                     if (err instanceof ApiException) {
                         return err;
                     }
-                    // wrap any other failure
                     return new DataControllerException(type, locale, count, err);
                 })
                 .flatMap(records ->
@@ -104,6 +119,7 @@ public class DataController {
                                 })
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 )
+                // now map payload → Response
                 .map(payload -> {
                     String mediaType = "xml".equalsIgnoreCase(key)
                             ? MediaType.APPLICATION_XML
