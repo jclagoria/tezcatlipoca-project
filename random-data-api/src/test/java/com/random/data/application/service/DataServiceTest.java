@@ -8,6 +8,7 @@ import com.random.data.domain.port.exception.ProviderNotFoundException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.metrics.Counter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class DataServiceTest {
     ProviderRegistry registry;
 
     @Mock
+    Counter errorCounter;
+
+    @Mock
     @SuppressWarnings("unchecked")
     DataProvider<String> provider;
 
@@ -45,7 +49,7 @@ class DataServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new DataService(registry);
+        service = new DataService(registry, errorCounter);
         // default to virtual threads for consistency
         Infrastructure.setDefaultExecutor(Executors.newVirtualThreadPerTaskExecutor());
     }
