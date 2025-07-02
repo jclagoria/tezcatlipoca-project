@@ -1,5 +1,7 @@
 package com.random.data.domain.port;
 
+import io.smallrye.mutiny.Uni;
+
 import java.util.List;
 
 public interface DataProvider<T> {
@@ -10,6 +12,6 @@ public interface DataProvider<T> {
      * @param count the number of elements to generate
      * @return a list of elements of type T, of the size specified by the count parameter
      */
-    List<T> generate(String locale, int count);
+    Uni<List<T>> generate(String locale, int count);
 
 }

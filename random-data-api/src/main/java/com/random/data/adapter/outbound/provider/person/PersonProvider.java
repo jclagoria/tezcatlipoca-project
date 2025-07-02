@@ -5,51 +5,70 @@ import com.random.data.adapter.outbound.provider.person.model.Person;
 import com.random.data.application.registration.ProviderKey;
 import com.random.data.domain.port.DataProvider;
 import com.random.data.domain.port.exception.InvalidParameterException;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import net.datafaker.Faker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provider for generating random person data.
  * Uses DataFaker for generating realistic test data.
- * Optimized for large data generation.
+ * Optimized for large data generation with streaming support.
  */
 @ApplicationScoped
 @ProviderKey("person")
 public class PersonProvider implements DataProvider<Person> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersonProvider.class);
-    private static final ForkJoinPool POOL = new ForkJoinPool();
-    private static final int BATCH_SIZE = 1000;
+    private static final int BUFFER_SIZE = 100;
+
+    private static final ConcurrentMap<String, Faker> FAKER_CACHE = new ConcurrentHashMap<>();
 
     /**
-     * Generates a list of random person records.
-     * @param locale The locale for data generation (e.g., "en_US")
-     * @param count Number of records to generate
-     * @return List of generated Person objects
+     * Generates a list of random Person records.
+     *
+     * @param locale The locale for data generation (e.g., "en_US" or "en-US")
+     * @param count  Number of records to generate (must be ≥ 1)
+     * @return Uni emitting the List of generated Person objects
      */
     @Override
-    public List<Person> generate(String locale, int count) {
-        LOGGER.info("Generating {} Person records for locale={}", count, locale);
+    public Uni<List<Person>> generate(String locale, int count) {
+        // 1) Validate once at entry
         validateParameters(locale, count);
 
-        Faker faker = createFaker(locale);
-        
-        // Use ForkJoinPool for parallel processing with controlled batch sizes
-        return POOL.invoke(new PersonBatchTask(faker, count));
+        LOGGER.info("Generating {} Person records for locale={}", count, locale);
+
+        // 2) Get or create a cached Faker for this locale
+        Faker faker = FAKER_CACHE.computeIfAbsent(locale, this::newFakerInstance);
+
+        // 3) Build the reactive pipeline, scheduled on Quarkus’s virtual-thread executor
+        return Multi.createFrom().range(0, count)
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                .onItem().transform(i -> createPerson(faker))
+                .onItem().transform(person -> {
+                    // Guard per-item debug logging
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Generated person record {}", person);
+                    }
+                    return person;
+                })
+                .onOverflow().buffer(BUFFER_SIZE)
+                .collect().asList();
     }
 
     /**
      * Validates input parameters.
+     *
      * @param locale The locale string
-     * @param count Number of records to generate
+     * @param count  Number of records to generate
      * @throws InvalidParameterException if parameters are invalid
      */
     private void validateParameters(String locale, int count) {
@@ -64,23 +83,30 @@ public class PersonProvider implements DataProvider<Person> {
     }
 
     /**
-     * Creates a new Faker instance with the specified locale.
-     * @param locale The locale string (e.g., "en_US")
-     * @return Initialized Faker instance
-     * @throws InvalidParameterException if locale format is invalid
+     * Parses the locale string robustly (accepts both "en_US" and "en-US"),
+     * and instantiates a Faker for that locale.
+     *
+     * @param locale The locale string
+     * @return Configured Faker instance
+     * @throws InvalidParameterException if the locale format is invalid
      */
-    private Faker createFaker(String locale) {
+    private Faker newFakerInstance(String locale) {
         try {
-            String[] parts = locale.split("_");
-            return new Faker(Locale.of(parts[0], parts[1]));
+            String tag = locale.replace('_', '-');
+            Locale loc = Locale.forLanguageTag(tag);
+            if (loc.getLanguage().isEmpty()) {
+                throw new IllegalArgumentException("Empty language in tag");
+            }
+            return new Faker(loc);
         } catch (Exception e) {
-            LOGGER.error("Failed to create Faker instance for locale {}: {}", locale, e.getMessage());
-            throw new InvalidParameterException("Invalid locale format: " + locale);
+            LOGGER.error("Invalid locale format '{}': {}", locale, e.getMessage(), e);
+            throw new InvalidParameterException("Invalid locale: " + locale);
         }
     }
 
     /**
      * Creates a complete Person object with all required fields.
+     *
      * @param faker Faker instance for data generation
      * @return Generated Person object
      */
@@ -99,50 +125,5 @@ public class PersonProvider implements DataProvider<Person> {
                 PictureGenerator.generate(faker),
                 NationalityGenerator.generate(faker)
         );
-    }
-
-    /**
-     * Task for generating a batch of persons.
-     */
-    private class PersonBatchTask extends RecursiveTask<List<Person>> {
-        private final Faker faker;
-        private final int count;
-
-        PersonBatchTask(Faker faker, int count) {
-            this.faker = faker;
-            this.count = count;
-        }
-
-        @Override
-        protected List<Person> compute() {
-            if (count <= BATCH_SIZE) {
-                // For small batches, generate sequentially
-                return generateBatch(count);
-            }
-
-            // Split into smaller tasks
-            int split = count / 2;
-            PersonBatchTask left = new PersonBatchTask(faker, split);
-            PersonBatchTask right = new PersonBatchTask(faker, count - split);
-
-            // Start right task asynchronously
-            right.fork();
-            
-            // Compute left task and wait for right
-            List<Person> leftResult = left.compute();
-            List<Person> rightResult = right.join();
-
-            // Combine results
-            leftResult.addAll(rightResult);
-            return leftResult;
-        }
-
-        private List<Person> generateBatch(int count) {
-            List<Person> result = new ArrayList<>(count);
-            for (int i = 0; i < count; i++) {
-                result.add(createPerson(faker));
-            }
-            return result;
-        }
     }
 }

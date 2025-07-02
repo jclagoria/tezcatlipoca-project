@@ -24,27 +24,30 @@ public class DataService {
         this.providerRegistry = providerRegistry;
     }
 
+    @SuppressWarnings("unchecked") // for the one cast below
     public Uni<List<?>> generate(String type, String locale, int count) {
+        // 1) lookup the provider
+        DataProvider<?> dataProvider = providerRegistry.getProvider(type);
 
-        return Uni.createFrom()
-                // force the generic to List<?> so the returned Uni is Uni<List<?>>
-                .<List<?>>item(() -> {
-                    // Lookup provider
-                    DataProvider<?> dataProvider = providerRegistry.getProvider(type);
+        // 2) call it (returns Uni<List<T>> for some T), offload to virtual threads
+        Uni<?> raw = dataProvider
+                .generate(locale, count)
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor());
 
-                    // Generate data
-                    return  dataProvider.generate(locale, count);
-                })
-                // Offload blocking or CPU-intensive work to the default executor (e.g., virtual threads)
-                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                .onFailure().invoke(err ->
-                        LOGGER.error("Error in DataService.generate() for type='{}', locale='{}', count={}",
-                                type, locale, count, err)
-                ).onFailure().transform(err -> {
-                    if (err instanceof ApiException) {
-                        return err;
-                    }
-                    return new DataGenerationException(type, locale, count, err);
-                });
+        // 3) cast once to Uni<List<?>>
+        Uni<List<?>> typed = (Uni<List<?>>)(Uni<?>) raw;
+
+        // 4) attach your failure‐mapper
+        return typed.onFailure().transform(failure -> {
+            LOGGER.error(
+                    "Error in DataService.generate() for type='{}', locale='{}', count={}'",
+                    type, locale, count,
+                    failure
+            );
+            if (failure instanceof ApiException) {
+                return failure;
+            }
+            return new DataGenerationException(type, locale, count, failure);
+        });
     }
 }

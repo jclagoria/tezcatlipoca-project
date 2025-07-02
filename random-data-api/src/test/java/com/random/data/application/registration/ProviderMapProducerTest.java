@@ -3,6 +3,7 @@ package com.random.data.application.registration;
 import com.random.data.domain.port.DataProvider;
 import com.random.data.domain.port.exception.DuplicateProviderKeyException;
 import com.random.data.domain.port.exception.MissingProviderKeyException;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +32,8 @@ class ProviderMapProducerTest {
             @ProviderKey("  Mixed Case  ")
             class P implements DataProvider<String> {
                 @Override
-                public List<String> generate(String type, int count) {
-                    return List.of("value");
+                public Uni<List<String>> generate(String type, int count) {
+                    return (Uni<List<String>>) List.of("value");
                 }
             }
 
@@ -57,15 +58,15 @@ class ProviderMapProducerTest {
             @ProviderKey("A")
             class AImpl implements DataProvider<String> {
                 @Override
-                public List<String> generate(String type, int count) {
-                    return List.of("a");
+                public Uni<List<String>> generate(String type, int count) {
+                    return (Uni<List<String>>) List.of("a");
                 }
             }
             @ProviderKey("B")
             class BImpl implements DataProvider<String> {
                 @Override
-                public List<String> generate(String type, int count) {
-                    return List.of("b");
+                public Uni<List<String>> generate(String type, int count) {
+                    return (Uni<List<String>>) List.of("b");
                 }
             }
 
@@ -87,8 +88,8 @@ class ProviderMapProducerTest {
     void missingAnnotationShouldFail() {
         class NoKey implements DataProvider<String> {
             @Override
-            public List<String> generate(String type, int count) {
-                return List.of("x");
+            public Uni<List<String>> generate(String type, int count) {
+                return (Uni<List<String>>) List.of("x");
             }
         }
         Bean<DataProvider<?>> bean = TestFixtures.beanFor(NoKey.class, new NoKey());
@@ -107,15 +108,15 @@ class ProviderMapProducerTest {
         @ProviderKey("dup")
         class Impl1 implements DataProvider<String> {
             @Override
-            public List<String> generate(String type, int count) {
-                return List.of("1");
+            public Uni<List<String>> generate(String type, int count) {
+                return (Uni<List<String>>)  List.of("1");
             }
         }
         @ProviderKey(" DUP ")
         class Impl2 implements DataProvider<String> {
             @Override
-            public List<String> generate(String type, int count) {
-                return List.of("2");
+            public Uni<List<String>> generate(String type, int count) {
+                return (Uni<List<String>>) List.of("2");
             }
         }
 
