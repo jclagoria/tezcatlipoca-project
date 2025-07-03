@@ -1,4 +1,4 @@
-package com.random.data.adapter.outbound.provider.person.model;
+package com.random.data.domain.model.person;
 
 public record Person(
         String gender,

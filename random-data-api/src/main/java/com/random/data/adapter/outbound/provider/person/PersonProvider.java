@@ -2,7 +2,7 @@ package com.random.data.adapter.outbound.provider.person;
 
 import com.random.data.adapter.outbound.provider.AbstractDataProvider;
 import com.random.data.adapter.outbound.provider.person.generator.*;
-import com.random.data.adapter.outbound.provider.person.model.Person;
+import com.random.data.domain.model.person.Person;
 import com.random.data.application.registration.ProviderKey;
 import com.random.data.domain.exception.InvalidParameterException;
 import io.smallrye.mutiny.Multi;

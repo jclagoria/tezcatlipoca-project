@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.provider.person;
 
-import com.random.data.adapter.outbound.provider.person.model.Person;
+import com.random.data.domain.model.person.Person;
 import com.random.data.domain.exception.InvalidParameterException;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.junit.jupiter.api.BeforeEach;

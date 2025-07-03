@@ -1,4 +1,4 @@
-package com.random.data.adapter.inboud.rest;
+package com.random.data.adapter.inbound.rest;
 
 import com.random.data.application.service.DataService;
 import com.random.data.domain.exception.*;

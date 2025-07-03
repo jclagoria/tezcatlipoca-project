@@ -1,7 +1,7 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
 import net.datafaker.Faker;
-import com.random.data.adapter.outbound.provider.person.model.Dob;
+import com.random.data.domain.model.person.Dob;
 
 import java.time.LocalDate;
 import java.time.Period;

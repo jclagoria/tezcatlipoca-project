@@ -1,7 +1,7 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
 import net.datafaker.Faker;
-import com.random.data.adapter.outbound.provider.person.model.Login;
+import com.random.data.domain.model.person.Login;
 
 public class LoginGenerator implements FakerGenerator<Login> {
     private static final int MIN_PASSWORD_LENGTH = 0;
