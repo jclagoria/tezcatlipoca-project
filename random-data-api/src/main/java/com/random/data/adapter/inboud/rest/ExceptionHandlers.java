@@ -1,12 +1,6 @@
 package com.random.data.adapter.inboud.rest;
 
-import com.random.data.domain.port.exception.ApiException;
-import com.random.data.domain.port.exception.DataGenerationException;
-import com.random.data.domain.port.exception.DataSerializationException;
-import com.random.data.domain.port.exception.InvalidParameterException;
-import com.random.data.domain.port.exception.ProviderNotFoundException;
-import com.random.data.domain.port.exception.RateLimitExceededException;
-import com.random.data.domain.port.exception.UnsupportedFormatException;
+import com.random.data.domain.exception.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -149,6 +143,23 @@ public class ExceptionHandlers {
             .type(MediaType.APPLICATION_JSON)
             .entity(error)
             .build();
+    }
+
+    @ServerExceptionMapper(DataUnavailableException.class)
+    public Response handleDataUnavailable(DataUnavailableException ex) {
+        String errorId = UUID.randomUUID().toString();
+        ErrorDto error = ErrorDto.of(
+                errorId,
+                ex.getStatus().getStatusCode(),
+                ex.getMessage(),
+                Instant.now(),
+                DOCUMENTATION_URL
+        );
+        return Response
+                .status(ex.getStatus())
+                .type(MediaType.APPLICATION_JSON)
+                .entity(error)
+                .build();
     }
 
     @ServerExceptionMapper

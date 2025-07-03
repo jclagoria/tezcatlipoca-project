@@ -4,7 +4,7 @@ import com.random.data.application.registration.SerializerKey;
 import com.random.data.application.service.DataService;
 import com.random.data.domain.port.RateLimiterPort;
 import com.random.data.domain.port.SerializePort;
-import com.random.data.domain.port.exception.RateLimitExceededException;
+import com.random.data.domain.exception.RateLimitExceededException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;

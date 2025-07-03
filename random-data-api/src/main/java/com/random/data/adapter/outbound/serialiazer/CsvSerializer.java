@@ -2,7 +2,7 @@ package com.random.data.adapter.outbound.serialiazer;
 
 import com.random.data.application.registration.SerializerKey;
 import com.random.data.domain.port.SerializePort;
-import com.random.data.domain.port.exception.DataSerializationException;
+import com.random.data.domain.exception.DataSerializationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;

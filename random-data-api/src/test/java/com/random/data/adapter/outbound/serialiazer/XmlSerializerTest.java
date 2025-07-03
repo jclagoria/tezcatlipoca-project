@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.serialiazer;
 
-import com.random.data.domain.port.exception.DataSerializationException;
+import com.random.data.domain.exception.DataSerializationException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;

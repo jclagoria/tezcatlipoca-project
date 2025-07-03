@@ -2,8 +2,8 @@ package com.random.data.application.service;
 
 import com.random.data.application.registration.ProviderRegistry;
 import com.random.data.domain.port.DataProvider;
-import com.random.data.domain.port.exception.ApiException;
-import com.random.data.domain.port.exception.DataGenerationException;
+import com.random.data.domain.exception.ApiException;
+import com.random.data.domain.exception.DataGenerationException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
