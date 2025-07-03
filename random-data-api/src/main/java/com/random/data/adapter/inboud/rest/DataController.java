@@ -1,9 +1,9 @@
 package com.random.data.adapter.inboud.rest;
 
 import com.random.data.application.service.DataService;
+import com.random.data.domain.exception.*;
 import com.random.data.domain.port.RateLimiterPort;
 import com.random.data.domain.port.SerializePort;
-import com.random.data.domain.port.exception.*;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.inject.Any;

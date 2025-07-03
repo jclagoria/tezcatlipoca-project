@@ -1,10 +1,10 @@
 package com.random.data.adapter.outbound.provider.person;
 
+import com.random.data.adapter.outbound.provider.AbstractDataProvider;
 import com.random.data.adapter.outbound.provider.person.generator.*;
 import com.random.data.adapter.outbound.provider.person.model.Person;
 import com.random.data.application.registration.ProviderKey;
-import com.random.data.domain.port.DataProvider;
-import com.random.data.domain.port.exception.InvalidParameterException;
+import com.random.data.domain.exception.InvalidParameterException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Provider for generating random person data.
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @ApplicationScoped
 @ProviderKey("person")
-public class PersonProvider implements DataProvider<Person> {
+public class PersonProvider extends AbstractDataProvider<Person> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersonProvider.class);
     private static final int BUFFER_SIZE = 100;
@@ -40,7 +40,7 @@ public class PersonProvider implements DataProvider<Person> {
      * @return Uni emitting the List of generated Person objects
      */
     @Override
-    public Uni<List<Person>> generate(String locale, int count) {
+    public Uni<List<Person>> doGenerate(String locale, int count) {
         // 1) Validate once at entry
         validateParameters(locale, count);
 

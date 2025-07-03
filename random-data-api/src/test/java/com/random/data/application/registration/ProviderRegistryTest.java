@@ -1,8 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
-import com.random.data.domain.port.exception.MissingProviderKeyException;
-import com.random.data.domain.port.exception.ProviderNotFoundException;
+import com.random.data.domain.exception.MissingProviderKeyException;
+import com.random.data.domain.exception.ProviderNotFoundException;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

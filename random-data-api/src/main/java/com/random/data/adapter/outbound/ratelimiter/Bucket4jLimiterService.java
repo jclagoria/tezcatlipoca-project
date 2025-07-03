@@ -1,10 +1,9 @@
 package com.random.data.adapter.outbound.ratelimiter;
 
 import com.random.data.domain.port.RateLimiterPort;
-import com.random.data.domain.port.exception.RateLimitExceededException;
+import com.random.data.domain.exception.RateLimitExceededException;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;

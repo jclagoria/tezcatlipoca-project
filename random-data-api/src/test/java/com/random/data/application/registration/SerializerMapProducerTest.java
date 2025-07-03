@@ -2,8 +2,8 @@ package com.random.data.application.registration;
 
 import com.random.data.adapter.outbound.serialiazer.CsvSerializer;
 import com.random.data.domain.port.SerializePort;
-import com.random.data.domain.port.exception.DuplicateSerializerKeyException;
-import com.random.data.domain.port.exception.MissingSerializerKeyException;
+import com.random.data.domain.exception.DuplicateSerializerKeyException;
+import com.random.data.domain.exception.MissingSerializerKeyException;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;

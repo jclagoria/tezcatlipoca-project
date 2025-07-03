@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.ratelimiter;
 
-import com.random.data.domain.port.exception.RateLimitExceededException;
+import com.random.data.domain.exception.RateLimitExceededException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

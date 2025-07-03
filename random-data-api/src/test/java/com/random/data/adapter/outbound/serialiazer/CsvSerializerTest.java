@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.serialiazer;
 
-import com.random.data.domain.port.exception.DataSerializationException;
+import com.random.data.domain.exception.DataSerializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

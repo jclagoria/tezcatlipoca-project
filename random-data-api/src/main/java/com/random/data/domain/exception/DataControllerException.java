@@ -1,4 +1,4 @@
-package com.random.data.domain.port.exception;
+package com.random.data.domain.exception;
 
 import jakarta.ws.rs.core.Response;
 

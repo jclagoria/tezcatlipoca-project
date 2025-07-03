@@ -61,11 +61,15 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
-        <!-- Soporte de JAXB para marshalling/unmarshalling -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jaxb</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.bucket4j</groupId>

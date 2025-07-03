@@ -1,8 +1,8 @@
 package com.random.data.application.registration;
 
 import com.random.data.domain.port.DataProvider;
-import com.random.data.domain.port.exception.DuplicateProviderKeyException;
-import com.random.data.domain.port.exception.MissingProviderKeyException;
+import com.random.data.domain.exception.DuplicateProviderKeyException;
+import com.random.data.domain.exception.MissingProviderKeyException;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;

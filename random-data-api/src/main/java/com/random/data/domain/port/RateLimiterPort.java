@@ -1,6 +1,6 @@
 package com.random.data.domain.port;
 
-import com.random.data.domain.port.exception.RateLimitExceededException;
+import com.random.data.domain.exception.RateLimitExceededException;
 
 public interface RateLimiterPort {
 
