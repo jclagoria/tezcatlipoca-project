@@ -1,0 +1,16 @@
+# <project-root>/graphql.config.yml
+projects:
+  random-data-api:
+    # 1) Where your schema SDL lives (could be *.graphqls or *.graphql)
+    schema:
+      - "src/main/resources/graphql/**/*.graphqls"
+    # 2) Where your client query/mutation documents live
+    documents:
+      - "src/**/*.{graphql,gql}"
+    # 3) (optional) define your running endpoint for IDE features
+    extensions:
+      endpoints:
+        Default GraphQL Endpoint:
+          url: http://localhost:8080/graphql
+          headers:
+            Content-Type: application/json

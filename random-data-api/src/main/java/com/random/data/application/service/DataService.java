@@ -1,9 +1,9 @@
 package com.random.data.application.service;
 
 import com.random.data.application.registration.ProviderRegistry;
-import com.random.data.domain.port.DataProvider;
 import com.random.data.domain.exception.ApiException;
 import com.random.data.domain.exception.DataGenerationException;
+import com.random.data.domain.port.DataProvider;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static io.smallrye.mutiny.helpers.spies.Spy.onFailure;
 
 @ApplicationScoped
 public class DataService {

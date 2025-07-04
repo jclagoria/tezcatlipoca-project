@@ -1,7 +1,7 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
 import net.datafaker.Faker;
-import com.random.data.adapter.outbound.provider.person.model.Location;
+import com.random.data.domain.model.person.Location;
 
 public class LocationGenerator implements FakerGenerator<Location> {
     private static final int MIN_STREET_NUMBER = 1;

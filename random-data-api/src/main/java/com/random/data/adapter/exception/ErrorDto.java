@@ -1,4 +1,4 @@
-package com.random.data.adapter.inboud.rest;
+package com.random.data.adapter.exception;
 
 import jakarta.ws.rs.core.Response;
 

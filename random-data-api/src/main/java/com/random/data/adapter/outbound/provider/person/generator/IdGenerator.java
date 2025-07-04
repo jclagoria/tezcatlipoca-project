@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
-import com.random.data.adapter.outbound.provider.person.model.Id;
+import com.random.data.domain.model.person.Id;
 import com.random.data.adapter.outbound.provider.person.util.WeightedRandom;
 import net.datafaker.Faker;
 

@@ -1,6 +1,6 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
-import com.random.data.adapter.outbound.provider.person.model.Registered;
+import com.random.data.domain.model.person.Registered;
 import net.datafaker.Faker;
 
 import java.time.LocalDate;

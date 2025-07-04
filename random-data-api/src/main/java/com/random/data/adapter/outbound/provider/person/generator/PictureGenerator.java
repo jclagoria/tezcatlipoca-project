@@ -1,7 +1,7 @@
 package com.random.data.adapter.outbound.provider.person.generator;
 
 import net.datafaker.Faker;
-import com.random.data.adapter.outbound.provider.person.model.Picture;
+import com.random.data.domain.model.person.Picture;
 
 public class PictureGenerator implements FakerGenerator<Picture> {
     public static Picture generate(Faker faker) {

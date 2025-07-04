@@ -1,4 +1,4 @@
-package com.random.data.adapter.inboud.rest;
+package com.random.data.adapter.exception;
 
 import com.random.data.domain.exception.*;
 import jakarta.enterprise.context.ApplicationScoped;
