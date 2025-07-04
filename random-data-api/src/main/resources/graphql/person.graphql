@@ -1,0 +1,95 @@
+scalar Date
+
+"""
+A person’s name components.
+"""
+type Name {
+    title: String!
+    first: String!
+    last: String!
+}
+
+"""
+A person’s street address.
+"""
+type Location {
+    streetNumber: Int!
+    streetName: String!
+    city: String!
+    state: String!
+    country: String!
+    postcode: Int!
+}
+
+"""
+Login credentials for a person.
+"""
+type Login {
+    uuid: String!
+    username: String!
+    password: String!
+    salt: String!
+}
+
+"""
+Date of birth for a person.
+"""
+type Dob {
+    date: Date!
+    age: Int!
+}
+
+"""
+Registration date info for a person.
+"""
+type Registered {
+    date: Date!
+    age: Int!
+}
+
+"""
+Identification info for a person.
+"""
+type Id {
+    name: String!
+    value: String!
+}
+
+
+"""
+URLs to a person’s pictures.
+"""
+type Picture {
+    large: String!
+    medium: String!
+    thumbnail: String!
+}
+
+"""
+A randomly generated person record.
+"""
+type Person {
+    id: Id!
+    name: Name!
+    location: Location!
+    email: String!
+    login: Login!
+    dob: Dob!
+    registered: Registered!
+    phone: String!
+    cell: String!
+    picture: Picture!
+    nat: String!
+}
+
+"""
+Root Query type.
+"""
+type Query {
+    """
+    Get a list of randomly generated persons.
+    - locale: language/region code (default "en_US")
+    - count: how many persons to generate (1–100)
+    """
+    persons(locale: String = "en_US", count: Int = 1): [Person!]!
+}

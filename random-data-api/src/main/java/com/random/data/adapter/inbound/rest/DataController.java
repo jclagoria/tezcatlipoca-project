@@ -13,7 +13,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,6 @@ public class DataController {
     private final RateLimiterPort rateLimiterPort;
     private final Map<String, SerializePort> serializers;
     private final Counter errorCounter;
-
 
     @Inject
     public DataController(DataService dataService,
@@ -59,6 +60,16 @@ public class DataController {
 
     @GET
     @Path("/{type}")
+    @Counted(
+            name        = "data_service_get_requests",
+            absolute    = true,
+            description = "Total number of GET /api/{type} requests"
+    )
+    @Timed(
+            name        = "data_service_get_latency",
+            absolute    = true,
+            description = "Latency of GET /api/{type} endpoint"
+    )
     public Uni<Response> getData(
             @PathParam("type") String type,
             @QueryParam("locale") @DefaultValue("en_US") String locale,
